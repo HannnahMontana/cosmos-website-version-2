@@ -4,16 +4,19 @@ import {
   createJSONToken,
   isValidPassword,
   checkAuthMiddleware,
-} from "../util/auth.js";
-import { validateSignupData } from "../util/validation.js";
-import { handleValidationErrors } from "../util/errors.js";
+} from "../../util/auth.js";
+import { validateSignupData } from "../../util/validation.js";
+import { handleValidationErrors } from "../../util/errors.js";
 
 const router = Router();
 
+// Rejestracja użytkownika
 router.post("/signup", async (req, res, next) => {
+  console.log("Rejestracja użytkownika...");
   const data = req.body;
 
   try {
+    console.log("Walidacja danych rejestracji...");
     const errors = await validateSignupData(data, req.app.locals.pool);
     if (Object.keys(errors).length > 0) {
       return handleValidationErrors(
@@ -23,19 +26,26 @@ router.post("/signup", async (req, res, next) => {
       );
     }
 
+    console.log("Dodawanie użytkownika...");
     const createdUser = await add(data, req.app.locals.pool);
-    const authToken = createJSONToken(createdUser.username);
+    const authToken = createJSONToken({
+      username: createdUser.username,
+      id: createdUser.id,
+    });
 
+    console.log("Użytkownik został dodany:", createdUser);
     res.status(201).json({
       message: "Użytkownik stworzony.",
-      user: createdUser,
+      user: { id: createdUser.id, username: createdUser.username },
       token: authToken,
     });
   } catch (error) {
+    console.error("Błąd rejestracji użytkownika:", error);
     next(error);
   }
 });
 
+// Logowanie użytkownika
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -48,13 +58,15 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const token = createJSONToken(username);
-    res.json({ token });
+    const token = createJSONToken({ username: user.username, id: user.id });
+    res.json({ message: "Logowanie powiodło się.", token });
   } catch (error) {
+    console.error("Błąd podczas logowania:", error);
     res.status(500).json({ message: "Wystąpił błąd podczas logowania." });
   }
 });
 
+// Pobieranie danych użytkownika
 router.get("/user", checkAuthMiddleware, async (req, res) => {
   const username = req.token.username;
 
@@ -64,9 +76,10 @@ router.get("/user", checkAuthMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Nie znaleziono użytkownika." });
     }
 
-    delete user.password;
-    res.json(user);
+    delete user.password; // Usunięcie hasła z odpowiedzi
+    res.json({ user });
   } catch (error) {
+    console.error("Błąd podczas pobierania danych użytkownika:", error);
     res.status(500).json({ message: "Wystąpił błąd." });
   }
 });

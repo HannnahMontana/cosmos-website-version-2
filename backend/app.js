@@ -1,14 +1,9 @@
 import express from "express";
 import bodyParser from "body-parser";
-import pkg from "pg";
-import authRoutes from "./routes/auth.js";
-import articleRoutes from "./routes/articles.js";
-// import commentRoutes from "./routes/comments.js";
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-const { Pool } = pkg;
 
 const app = express();
 const PORT = 8080;
@@ -19,31 +14,60 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
-// db connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+// Proxy routes
+app.use("/auth", async (req, res) => {
+  try {
+    console.log("Proxy to auth service");
+
+    console.log("Request method:", req.method);
+    console.log("Request URL:", `http://localhost:3001${req.url}`);
+    console.log("Request body:", req.body);
+
+    const response = await axios({
+      method: req.method,
+      url: `http://localhost:3001/auth/${req.url}`, // Proxy to auth service
+      headers: req.headers,
+      data: req.body,
+    });
+    console.log("Response from auth service", response);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({ message: error.message });
+  }
 });
-app.locals.pool = pool; // connection in multiple files
 
-// routes
-app.use(authRoutes);
-app.use(articleRoutes);
-// app.use("/comments", commentRoutes);
+app.use("/articles", async (req, res) => {
+  try {
+    console.log("Proxy to articles service");
+    const response = await axios({
+      method: req.method,
+      url: `http://localhost:3002${req.url}`, // Proxy to articles service
+      headers: req.headers,
+      data: req.body,
+    });
+    console("Response from articles service", response);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({ message: error.message });
+  }
+});
 
-// error handling
+// Error handling
 app.use((error, req, res, next) => {
   const status = error.status || 500;
   const message = error.message || "Coś poszło nie tak.";
   res.status(status).json({ message });
 });
 
-// server start
+// Server start
 app.listen(PORT, () => {
-  console.log(`Backend działa na http://localhost:${PORT}`);
-  console.log("DATABASE_URL:", process.env.DATABASE_URL);
-  console.log("JWT_KEY:", process.env.JWT_KEY);
+  console.log(`Gateway działa na http://localhost:${PORT}`);
 });

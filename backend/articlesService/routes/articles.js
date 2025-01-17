@@ -6,9 +6,10 @@ import {
   getArticle,
   deleteArticle,
 } from "../data/articles.js";
-import { validateArticle } from "../util/validation.js";
-import { handleValidationErrors } from "../util/errors.js";
-import { checkAuthMiddleware, checkAdminMiddleware } from "../util/auth.js";
+import { validateArticle } from "../../util/validation.js";
+import { handleValidationErrors } from "../../util/errors.js";
+import { checkAuthMiddleware, checkAdminMiddleware } from "../../util/auth.js";
+import axios from "axios";
 
 const router = Router();
 
@@ -80,10 +81,17 @@ router.get("/articles/:id", async (req, res, next) => {
 
   try {
     const article = await getArticle(id, req.app.locals.pool);
-    if (!article) {
+    if (!article.length) {
       return res.status(404).json({ message: "Artykuł nie znaleziony." });
     }
-    res.status(200).json(article);
+
+    // Pobieranie autora z mikroserwisu Users
+    const userResponse = await axios.get(
+      `http://localhost:3001/auth/${article[0].user_id}`
+    );
+    const author = userResponse.data;
+
+    res.status(200).json({ ...article[0], author });
   } catch (error) {
     next(error);
   }
@@ -98,7 +106,7 @@ router.delete(
 
     try {
       const article = await getArticle(id, req.app.locals.pool);
-      if (!article) {
+      if (!article.length) {
         return res.status(404).json({ message: "Artykuł nie znaleziony." });
       }
 

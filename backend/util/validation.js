@@ -1,4 +1,5 @@
-import { getArticleByTitle } from "../data/articles.js";
+import { getArticleByTitle } from "../articlesService/data/articles.js";
+import { get } from "../usersService/data/user.js";
 
 function isValidText(value, minLength = 1) {
   return value && value.trim().length >= minLength;
@@ -34,14 +35,18 @@ const validateArticle = async (data, pool) => {
 export const validateSignupData = async (data, pool) => {
   let errors = {};
 
+  console.log("Walidacja...");
   // validate username >= 3 chars
   if (!isValidText(data.username, 3)) {
     errors.username = "Nazwa użytkownika powinna mieć co najmniej 3 znaki.";
   } else {
+    console.log("Sprawdzanie czy użytkownik istnieje...");
     const existingUser = await get(data.username, pool);
+    console.log("existingUser:", existingUser);
     if (existingUser) {
       errors.username = "Taki użytkownik już istnieje.";
     }
+    console.log("no such user:");
   }
 
   // password validation > 6 chars

@@ -56,10 +56,9 @@ async function getArticles(limit, offset, pool) {
 
 async function getArticle(id, pool) {
   try {
-    const result = await pool.query(
-      "SELECT A.*, U.username AS author FROM articles A JOIN users U ON A.user_id = U.id WHERE A.id = $1",
-      [id]
-    );
+    const result = await pool.query("SELECT * FROM articles WHERE id = $1", [
+      id,
+    ]);
     console.log("result article", result.rows);
     return result.rows;
   } catch (error) {

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { NotAuthError } from "./errors.js";
 import dotenv from "dotenv";
 
-import { get as getUserByUsername } from "../data/user.js";
+import { get as getUserByUsername } from "../usersService/data/user.js";
 
 dotenv.config();
 
