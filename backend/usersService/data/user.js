@@ -17,12 +17,18 @@ async function add(user, pool) {
   }
 }
 
-async function get(username, pool) {
-  console.log(`Pobieranie użytkownika: ${username}`);
+async function get(identifier, pool, field = "username") {
+  console.log(`Pobieranie użytkownika: ${identifier}`);
+
+  const allowedFields = ["id", "username"]; // Lista dozwolonych pól
+  if (!allowedFields.includes(field)) {
+    throw new Error(`Pole "${field}" nie jest dozwolone do wyszukiwania.`);
+  }
+
   try {
-    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
-      username,
-    ]);
+    const query = `SELECT * FROM users WHERE ${field} = $1`;
+    const result = await pool.query(query, [identifier]);
+
     console.log("Pobrano dane użytkownika: ", result.rows[0]);
     return result.rows[0];
   } catch (error) {

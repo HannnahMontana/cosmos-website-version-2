@@ -8,6 +8,7 @@ export default function MainNavigation() {
   const { isAdmin } = useContext(UserContext);
 
   console.log("MainNavigation admin", isAdmin);
+  // console.log("MainNavigation admin", user.is_admin);
 
   return (
     <header>

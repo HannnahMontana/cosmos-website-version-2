@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { NotAuthError } from "./errors.js";
 import dotenv from "dotenv";
+import axios from "axios";
 
 import { get as getUserByUsername } from "../usersService/data/user.js";
 
@@ -62,20 +63,47 @@ function checkAuthMiddleware(req, res, next) {
 }
 
 // Middleware for checking if user is admin
+// async function checkAdminMiddleware(req, res, next) {
+//   if (!req.token) {
+//     return next(new NotAuthError("Not authenticated."));
+//   }
+
+//   const username = req.token.username;
+//   try {
+//     const user = await getUserByUsername(username, req.app.locals.pool);
+//     if (!user || !user.is_admin) {
+//       return next(new NotAuthError("Not authorized."));
+//     }
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// }
 async function checkAdminMiddleware(req, res, next) {
   if (!req.token) {
     return next(new NotAuthError("Not authenticated."));
   }
 
-  const username = req.token.username;
+  const token = req.headers.authorization.split(" ")[1];
+
   try {
-    const user = await getUserByUsername(username, req.app.locals.pool);
-    if (!user || !user.is_admin) {
+    // Wysyłamy żądanie do mikroserwisu użytkowników
+    const response = await axios.get("http://localhost:3001/auth/user", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const user = response.data;
+    if (!user.is_admin) {
       return next(new NotAuthError("Not authorized."));
     }
-    next();
+
+    next(); // Użytkownik jest adminem, kontynuuj
   } catch (error) {
-    next(error);
+    console.error(
+      "Error verifying admin status:",
+      error.response?.data || error.message
+    );
+    return next(new NotAuthError("Not authorized."));
   }
 }
 

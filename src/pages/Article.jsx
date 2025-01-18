@@ -50,6 +50,8 @@ export default function Article() {
     content = <p>Fetching event data...</p>;
   }
 
+  console.log("data", data);
+
   if (isError) {
     content = (
       <p>

@@ -56,6 +56,7 @@ async function getArticles(limit, offset, pool) {
 
 async function getArticle(id, pool) {
   try {
+    console.log("getting article");
     const result = await pool.query("SELECT * FROM articles WHERE id = $1", [
       id,
     ]);

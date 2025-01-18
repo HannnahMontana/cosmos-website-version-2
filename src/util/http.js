@@ -4,7 +4,7 @@ import { getAuthToken } from "./auth";
 export const queryClient = new QueryClient();
 
 export async function fetchArticles({ signal, limit, offset }) {
-  let url = "http://localhost:8080/articles";
+  let url = "http://localhost:8080/articles/articles";
 
   if (limit && offset) {
     url += "?limit=" + limit + "&offset=" + offset;
@@ -33,9 +33,12 @@ export async function fetchArticles({ signal, limit, offset }) {
 export async function fetchArticle({ id, signal }) {
   console.log("fetching article id", id);
 
-  const response = await fetch(`http://localhost:8080/articles/${id}`, {
-    signal,
-  });
+  const response = await fetch(
+    `http://localhost:8080/articles/articles/${id}`,
+    {
+      signal,
+    }
+  );
 
   console.log("response", response);
 
@@ -48,15 +51,13 @@ export async function fetchArticle({ id, signal }) {
     throw error;
   }
 
-  const articleList = await response.json();
-
-  return articleList[0];
+  return await response.json();
 }
 
 export async function createNewArticle(articleData) {
   const token = getAuthToken();
 
-  const response = await fetch(`http://localhost:8080/articles`, {
+  const response = await fetch(`http://localhost:8080/articles/articles`, {
     method: "POST",
     body: JSON.stringify(articleData),
     headers: {
@@ -87,14 +88,17 @@ export async function updateArticle({ id, article }) {
 
   console.log("updateArticle id", id, article);
 
-  const response = await fetch(`http://localhost:8080/articles/${id}`, {
-    method: "PUT",
-    body: JSON.stringify({ article }),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `http://localhost:8080/articles/articles/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ article }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   console.log("response from http.js updateArticle", response);
 
@@ -118,12 +122,15 @@ export async function deleteArticle(id) {
 
   console.log("deleting article id", id);
 
-  const response = await fetch(`http://localhost:8080/articles/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `http://localhost:8080/articles/articles/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   console.log("response from http.js deleteArticle", response);
 
@@ -147,7 +154,7 @@ export async function deleteArticle(id) {
 
 export async function fetchUserData(token) {
   try {
-    const response = await fetch("http://localhost:8080/user", {
+    const response = await fetch("http://localhost:8080/auth/user", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -163,24 +170,26 @@ export async function fetchUserData(token) {
   }
 }
 
-export async function fetchUsernameById(id) {
-  try {
-    console.log("fetching username for id", id);
+// export async function fetchUsernameById(id) {
+//   try {
+//     console.log("fetching username for id", id);
 
-    const response = await fetch(`http://localhost:8080/users/${id}/username`);
+//     const response = await fetch(
+//       `http://localhost:8080/auth/users/${id}/username`
+//     );
 
-    console.log("response", response);
+//     console.log("response", response);
 
-    if (!response.ok) {
-      throw new Error("Błąd podczas pobierania nazwy użytkownika.");
-    }
+//     if (!response.ok) {
+//       throw new Error("Błąd podczas pobierania nazwy użytkownika.");
+//     }
 
-    const data = await response.json();
+//     const data = await response.json();
 
-    console.log("data", data);
-    return data.username;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
+//     console.log("data", data);
+//     return data.username;
+//   } catch (error) {
+//     console.error(error);
+//     return null;
+//   }
+// }

@@ -19,16 +19,6 @@ export function UserProvider({ children }) {
     setLoading(false);
   };
 
-  // const fetchUser = async () => {
-  //   setLoading(true);
-  //   const userData = await fetchUserData(token);
-  //   if (userData) {
-  //     updateUser(userData);
-  //   } else {
-  //     clearUser();
-  //   }
-  // };
-
   const fetchUser = async (token) => {
     setLoading(true);
     try {

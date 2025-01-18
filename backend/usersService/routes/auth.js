@@ -28,10 +28,11 @@ router.post("/signup", async (req, res, next) => {
 
     console.log("Dodawanie użytkownika...");
     const createdUser = await add(data, req.app.locals.pool);
-    const authToken = createJSONToken({
-      username: createdUser.username,
-      id: createdUser.id,
-    });
+    const authToken = createJSONToken(createdUser.username);
+    // const authToken = createJSONToken({
+    //   username: createdUser.username,
+    //   id: createdUser.id,
+    // });
 
     console.log("Użytkownik został dodany:", createdUser);
     res.status(201).json({
@@ -58,7 +59,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const token = createJSONToken({ username: user.username, id: user.id });
+    const token = createJSONToken(user.username);
     res.json({ message: "Logowanie powiodło się.", token });
   } catch (error) {
     console.error("Błąd podczas logowania:", error);
@@ -66,9 +67,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Pobieranie danych użytkownika
+// Pobieranie danych użytkownika na podstawie tokenu
 router.get("/user", checkAuthMiddleware, async (req, res) => {
   const username = req.token.username;
+
+  console.log("Pobieranie danych użytkownika:", username);
 
   try {
     const user = await get(username, req.app.locals.pool);
@@ -76,8 +79,25 @@ router.get("/user", checkAuthMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Nie znaleziono użytkownika." });
     }
 
-    delete user.password; // Usunięcie hasła z odpowiedzi
-    res.json({ user });
+    delete user.password;
+    res.json(user);
+  } catch (error) {
+    console.error("Błąd podczas pobierania danych użytkownika:", error);
+    res.status(500).json({ message: "Wystąpił błąd." });
+  }
+});
+
+// pobieranie uzytkownika na podstawie id
+router.get("/user/:id/username", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await get(id, req.app.locals.pool, "id");
+    if (!user) {
+      return res.status(404).json({ message: "Nie znaleziono użytkownika." });
+    }
+
+    res.json({ username: user.username });
   } catch (error) {
     console.error("Błąd podczas pobierania danych użytkownika:", error);
     res.status(500).json({ message: "Wystąpił błąd." });

@@ -18,7 +18,9 @@ router.post(
   checkAuthMiddleware,
   checkAdminMiddleware,
   async (req, res, next) => {
+    console.log("POST /articles");
     const { article: data } = req.body;
+    console.log("data", data);
     try {
       const errors = await validateArticle(data, req.app.locals.pool);
       handleValidationErrors(
@@ -27,7 +29,9 @@ router.post(
         "Dodawanie artykułu nie powiodło się z powodu błędów walidacji."
       );
 
+      console.log("Dodawanie artykułu...");
       const createdArticle = await add(data, req.app.locals.pool);
+      console.log("createdArticle", createdArticle);
       res
         .status(201)
         .json({ message: "Artykuł dodany do bazy.", article: createdArticle });
@@ -65,11 +69,16 @@ router.put(
 );
 
 router.get("/articles", async (req, res, next) => {
+  console.log("GET /articles");
   const limit = parseInt(req.query.limit) || 6;
   const offset = parseInt(req.query.offset) || 0;
 
+  console.log("limit", limit);
+  console.log("offset", offset);
   try {
+    console.log("Pobieranie artykułów...");
     const articles = await getArticles(limit, offset, req.app.locals.pool);
+    console.log("articles", articles);
     res.status(200).json({ articles, hasMore: articles.length === limit });
   } catch (error) {
     next(error);
@@ -79,17 +88,25 @@ router.get("/articles", async (req, res, next) => {
 router.get("/articles/:id", async (req, res, next) => {
   const { id } = req.params;
 
+  console.log("GET /articles/:id", id);
+
   try {
     const article = await getArticle(id, req.app.locals.pool);
+
+    console.log("article from routes: ", article);
+
     if (!article.length) {
       return res.status(404).json({ message: "Artykuł nie znaleziony." });
     }
 
     // Pobieranie autora z mikroserwisu Users
+    console.log("Pobieranie autora artykułu...", article[0].user_id);
     const userResponse = await axios.get(
-      `http://localhost:3001/auth/${article[0].user_id}`
+      `http://localhost:3001/auth/user/${article[0].user_id}/username`
     );
-    const author = userResponse.data;
+    const author = userResponse.data.username;
+
+    console.log("author", author);
 
     res.status(200).json({ ...article[0], author });
   } catch (error) {

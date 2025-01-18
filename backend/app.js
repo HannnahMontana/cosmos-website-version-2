@@ -28,7 +28,7 @@ app.use("/auth", async (req, res) => {
     console.log("Proxy to auth service");
 
     console.log("Request method:", req.method);
-    console.log("Request URL:", `http://localhost:3001${req.url}`);
+    console.log("Request URL:", `http://localhost:3001/auth${req.url}`);
     console.log("Request body:", req.body);
 
     const response = await axios({
@@ -37,7 +37,6 @@ app.use("/auth", async (req, res) => {
       headers: req.headers,
       data: req.body,
     });
-    console.log("Response from auth service", response);
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({ message: error.message });
@@ -49,11 +48,10 @@ app.use("/articles", async (req, res) => {
     console.log("Proxy to articles service");
     const response = await axios({
       method: req.method,
-      url: `http://localhost:3002${req.url}`, // Proxy to articles service
+      url: `http://localhost:3002/articles/${req.url}`, // Proxy to articles service
       headers: req.headers,
       data: req.body,
     });
-    console("Response from articles service", response);
     res.status(response.status).json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({ message: error.message });
